@@ -5,7 +5,7 @@ workflows:
     environment:
       vars:
         APP_NAME: video
-        FLUTTER: "false"        # يجب أن يكون string وليس boolean
+        FLUTTER: "false"        # string وليس boolean
         XCODE: "14.0"
         COCOAPODS: "true"       # string بدل boolean
         APPLE_ID: $APPLE_ID
@@ -16,12 +16,21 @@ workflows:
           if [ "${COCOAPODS}" = "true" ]; then
             pod install --repo-update || true
           fi
+      - name: Build IPA
+        script: |
+          xcodebuild -workspace video.xcworkspace \
+                     -scheme video \
+                     -configuration Release \
+                     -sdk iphoneos \
+                     CODE_SIGN_IDENTITY="iPhone Developer" \
+                     CODE_SIGN_STYLE="Automatic" \
+                     -allowProvisioningUpdates \
+                     archive -archivePath $CM_BUILD_DIR/video.xcarchive
+          xcodebuild -exportArchive \
+                     -archivePath $CM_BUILD_DIR/video.xcarchive \
+                     -exportOptionsPlist ExportOptions.plist \
+                     -exportPath $CM_BUILD_DIR
     triggering:
       events:
         - push
         - pull_request
-    builds:
-      ios:
-        scheme: video
-        export_method: development
-        build_configuration: Release
