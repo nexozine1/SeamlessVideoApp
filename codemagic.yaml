@@ -1,24 +1,27 @@
-
 workflows:
   ios-workflow:
     name: iOS Build - video
     max_build_duration: 60
     environment:
-      flutter: false
-      xcode: "14.0"          # عدّل حسب نسخة Xcode المتوفرة لديك
-      cocoapods: true         # إذا تستخدم CocoaPods، غيره إلى false إذا لا تستخدم
       vars:
         APP_NAME: video
+        FLUTTER: "false"        # يجب أن يكون string وليس boolean
+        XCODE: "14.0"
+        COCOAPODS: "true"       # string بدل boolean
+        APPLE_ID: $APPLE_ID
+        APP_SPECIFIC_PASSWORD: $APP_SPECIFIC_PASSWORD
     scripts:
       - name: Install dependencies
-        script: pod install --repo-update || true
-    triggers:
-      - push
-      - pull_request
-    ios:
-      scheme: video            # اسم Scheme في Xcode
-      export_method: development  # لأن الحساب مجاني
-      build_configuration: Release
-      signing:
-        apple_id: $APPLE_ID             # Apple ID الخاص بك كمتغير بيئة
-        password: $APP_SPECIFIC_PASSWORD # كلمة سر التطبيق الخاصة (App-Specific Password)
+        script: |
+          if [ "${COCOAPODS}" = "true" ]; then
+            pod install --repo-update || true
+          fi
+    triggering:
+      events:
+        - push
+        - pull_request
+    builds:
+      ios:
+        scheme: video
+        export_method: development
+        build_configuration: Release
